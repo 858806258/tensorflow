@@ -142,7 +142,7 @@ def main(_):
   else:
     fingerprint_input = input_placeholder
 
-  logits, dropout_prob = models.create_model(
+  logits, dropout_prob = models.create_model(      #创建模型
       fingerprint_input,
       model_settings,
       FLAGS.model_architecture,
@@ -160,7 +160,7 @@ def main(_):
     control_dependencies = [checks]
 
   # Create the back propagation and training evaluation machinery in the graph.
-  with tf.name_scope('cross_entropy'):
+  with tf.name_scope('cross_entropy'):      #损失函数
     cross_entropy_mean = tf.losses.sparse_softmax_cross_entropy(
         labels=ground_truth_input, logits=logits)
   if FLAGS.quantize:
@@ -168,18 +168,18 @@ def main(_):
   with tf.name_scope('train'), tf.control_dependencies(control_dependencies):
     learning_rate_input = tf.placeholder(
         tf.float32, [], name='learning_rate_input')
-    train_step = tf.train.GradientDescentOptimizer(
+    train_step = tf.train.GradientDescentOptimizer(                     #训练优化函数
         learning_rate_input).minimize(cross_entropy_mean)
-  predicted_indices = tf.argmax(logits, 1)
-  correct_prediction = tf.equal(predicted_indices, ground_truth_input)
-  confusion_matrix = tf.confusion_matrix(
+  predicted_indices = tf.argmax(logits, 1)       #计算最大的值,返回下标
+  correct_prediction = tf.equal(predicted_indices, ground_truth_input)    #计算是否相等
+  confusion_matrix = tf.confusion_matrix(    #混淆矩阵
       ground_truth_input, predicted_indices, num_classes=label_count)
-  evaluation_step = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+  evaluation_step = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))    #计算平均值
   with tf.get_default_graph().name_scope('eval'):
     tf.summary.scalar('cross_entropy', cross_entropy_mean)
     tf.summary.scalar('accuracy', evaluation_step)
 
-  global_step = tf.train.get_or_create_global_step()
+  global_step = tf.train.get_or_create_global_step()     #全局计步变量
   increment_global_step = tf.assign(global_step, global_step + 1)
 
   saver = tf.train.Saver(tf.global_variables())
@@ -190,16 +190,16 @@ def main(_):
                                        sess.graph)
   validation_writer = tf.summary.FileWriter(FLAGS.summaries_dir + '/validation')
 
-  tf.global_variables_initializer().run()
+  tf.global_variables_initializer().run()     #全局参数的初始化
 
   start_step = 1
 
-  if FLAGS.start_checkpoint:
+  if FLAGS.start_checkpoint:    #保存点载入
     models.load_variables_from_checkpoint(sess, FLAGS.start_checkpoint)
     start_step = global_step.eval(session=sess)
 
-  tf.logging.info('Training from step: %d ', start_step)
-
+  tf.logging.info('Training from step: %d ', start_step)   #打印当前的到哪一步
+  
   # Save graph.pbtxt.
   tf.train.write_graph(sess.graph_def, FLAGS.train_dir,
                        FLAGS.model_architecture + '.pbtxt')
@@ -210,7 +210,7 @@ def main(_):
       'w') as f:
     f.write('\n'.join(audio_processor.words_list))
 
-  # Training loop.
+  # Training loop.    开始训练
   training_steps_max = np.sum(training_steps_list)
   for training_step in xrange(start_step, training_steps_max + 1):
     # Figure out what the current learning rate is.
@@ -234,15 +234,15 @@ def main(_):
             increment_global_step,
         ],
         feed_dict={
-            fingerprint_input: train_fingerprints,
-            ground_truth_input: train_ground_truth,
-            learning_rate_input: learning_rate_value,
-            dropout_prob: 0.5
+            fingerprint_input: train_fingerprints,      #数据输入
+            ground_truth_input: train_ground_truth,     #正确的值
+            learning_rate_input: learning_rate_value,     #学习率
+            dropout_prob: 0.5                             #丢弃率
         })
     train_writer.add_summary(train_summary, training_step)
     tf.logging.info('Step #%d: rate %f, accuracy %.1f%%, cross entropy %f' %
                     (training_step, learning_rate_value, train_accuracy * 100,
-                     cross_entropy_value))
+                     cross_entropy_value))      #打印训练的情况
     is_last_step = (training_step == training_steps_max)
     if (training_step % FLAGS.eval_step_interval) == 0 or is_last_step:
       set_size = audio_processor.set_size('validation')
@@ -268,11 +268,11 @@ def main(_):
           total_conf_matrix = conf_matrix
         else:
           total_conf_matrix += conf_matrix
-      tf.logging.info('Confusion Matrix:\n %s' % (total_conf_matrix))
+      tf.logging.info('Confusion Matrix:\n %s' % (total_conf_matrix))      #矩阵
       tf.logging.info('Step %d: Validation accuracy = %.1f%% (N=%d)' %
                       (training_step, total_accuracy * 100, set_size))
 
-    # Save the model checkpoint periodically.
+    # Save the model checkpoint periodically.  保存点
     if (training_step % FLAGS.save_step_interval == 0 or
         training_step == training_steps_max):
       checkpoint_path = os.path.join(FLAGS.train_dir,
@@ -284,7 +284,7 @@ def main(_):
   tf.logging.info('set_size=%d', set_size)
   total_accuracy = 0
   total_conf_matrix = None
-  for i in xrange(0, set_size, FLAGS.batch_size):
+  for i in xrange(0, set_size, FLAGS.batch_size):       //测试模型预测
     test_fingerprints, test_ground_truth = audio_processor.get_data(
         FLAGS.batch_size, i, model_settings, 0.0, 0.0, 0, 'testing', sess)
     test_accuracy, conf_matrix = sess.run(
