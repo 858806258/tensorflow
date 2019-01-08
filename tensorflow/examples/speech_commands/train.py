@@ -80,7 +80,7 @@ import tensorflow as tf
 
 import input_data
 import models
-from tensorflow.python.platform import gfile
+from tensorflow.python.platform import gfile     #自带文件操作模块，本地可以用ｐｙｔｈｏｎ自带的文件模块，　open  isdir
 
 FLAGS = None
 
@@ -90,11 +90,11 @@ def main(_):
   tf.logging.set_verbosity(tf.logging.INFO)
 
   # Start a new TensorFlow session.
-  sess = tf.InteractiveSession()
+  sess = tf.InteractiveSession()      # 先构建ｓｅｓｓｉｏｎ , 后面再定义操作
 
   # Begin by making sure we have the training data we need. If you already have
   # training data of your own, use `--data_url= ` on the command line to avoid
-  # downloading.
+  # downloading.　　　可以定义自己的数据
   model_settings = models.prepare_model_settings(
       len(input_data.prepare_words_list(FLAGS.wanted_words.split(','))),
       FLAGS.sample_rate, FLAGS.clip_duration_ms, FLAGS.window_size_ms,
@@ -310,7 +310,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--data_url',
       type=str,
-      # pylint: disable=line-too-long
+      # pylint: disable=line-too-long　　　数据地址
       default='http://download.tensorflow.org/data/speech_commands_v0.02.tar.gz',
       # pylint: enable=line-too-long
       help='Location of speech training data archive on the web.')
@@ -319,144 +319,144 @@ if __name__ == '__main__':
       type=str,
       default='/tmp/speech_dataset/',
       help="""\
-      Where to download the speech training data to.
+      Where to download the speech training data to.下载到哪个目录．
       """)
   parser.add_argument(
       '--background_volume',
       type=float,
       default=0.1,
       help="""\
-      How loud the background noise should be, between 0 and 1.
+      How loud the background noise should be, between 0 and 1.　　背景噪音多少
       """)
   parser.add_argument(
       '--background_frequency',
       type=float,
       default=0.8,
       help="""\
-      How many of the training samples have background noise mixed in.
+      How many of the training samples have background noise mixed in.    背景噪音混合多少
       """)
   parser.add_argument(
-      '--silence_percentage',
+      '--silence_percentage',    
       type=float,
       default=10.0,
       help="""\
-      How much of the training data should be silence.
+      How much of the training data should be silence.  沉默百分比
       """)
   parser.add_argument(
       '--unknown_percentage',
       type=float,
       default=10.0,
       help="""\
-      How much of the training data should be unknown words.
+      How much of the training data should be unknown words.　　　未知百分比
       """)
   parser.add_argument(
       '--time_shift_ms',
       type=float,
       default=100.0,
       help="""\
-      Range to randomly shift the training audio by in time.
+      Range to randomly shift the training audio by in time. 范围随时间随机移动训练音频。
       """)
   parser.add_argument(
       '--testing_percentage',
       type=int,
       default=10,
-      help='What percentage of wavs to use as a test set.')
+      help='What percentage of wavs to use as a test set.')    #测试百分比
   parser.add_argument(
       '--validation_percentage',
       type=int,
       default=10,
-      help='What percentage of wavs to use as a validation set.')
+      help='What percentage of wavs to use as a validation set.')  #验证百分比
   parser.add_argument(
       '--sample_rate',
       type=int,
       default=16000,
-      help='Expected sample rate of the wavs',)
+      help='Expected sample rate of the wavs',)    #语音文件采样率
   parser.add_argument(
       '--clip_duration_ms',
       type=int,
       default=1000,
-      help='Expected duration in milliseconds of the wavs',)
+      help='Expected duration in milliseconds of the wavs',)     #预期语音文件时间长度
   parser.add_argument(
       '--window_size_ms',
       type=float,
       default=30.0,
-      help='How long each spectrogram timeslice is.',)
+      help='How long each spectrogram timeslice is.',)   #图谱时间片长度
   parser.add_argument(
       '--window_stride_ms',
       type=float,
       default=10.0,
-      help='How far to move in time between spectogram timeslices.',)
+      help='How far to move in time between spectogram timeslices.',)    #频谱图时间移动距离
   parser.add_argument(
       '--feature_bin_count',
       type=int,
       default=40,
-      help='How many bins to use for the MFCC fingerprint',
+      help='How many bins to use for the MFCC fingerprint',    #多少维度的mfcc
   )
   parser.add_argument(
       '--how_many_training_steps',
       type=str,
       default='15000,3000',
-      help='How many training loops to run',)
+      help='How many training loops to run',)   #训练步和步长
   parser.add_argument(
       '--eval_step_interval',
       type=int,
       default=400,
-      help='How often to evaluate the training results.')
+      help='How often to evaluate the training results.')     #多久显示下评估信息
   parser.add_argument(
       '--learning_rate',
       type=str,
       default='0.001,0.0001',
-      help='How large a learning rate to use when training.')
+      help='How large a learning rate to use when training.')    #学习率
   parser.add_argument(
       '--batch_size',
       type=int,
       default=100,
-      help='How many items to train with at once',)
+      help='How many items to train with at once',)    #批次大小
   parser.add_argument(
       '--summaries_dir',
       type=str,
       default='/tmp/retrain_logs',
-      help='Where to save summary logs for TensorBoard.')
+      help='Where to save summary logs for TensorBoard.')   #log 地址文件夹
   parser.add_argument(
       '--wanted_words',
       type=str,
       default='yes,no,up,down,left,right,on,off,stop,go',
-      help='Words to use (others will be added to an unknown label)',)
+      help='Words to use (others will be added to an unknown label)',)    #需要识别文字列表
   parser.add_argument(
       '--train_dir',
       type=str,
       default='/tmp/speech_commands_train',
-      help='Directory to write event logs and checkpoint.')
+      help='Directory to write event logs and checkpoint.')   #训练文件夹
   parser.add_argument(
       '--save_step_interval',
       type=int,
       default=100,
-      help='Save model checkpoint every save_steps.')
+      help='Save model checkpoint every save_steps.')   #保存点设置
   parser.add_argument(
       '--start_checkpoint',
       type=str,
       default='',
-      help='If specified, restore this pretrained model before any training.')
+      help='If specified, restore this pretrained model before any training.')   #重新加载训练的模型在训练之前
   parser.add_argument(
       '--model_architecture',
       type=str,
-      default='conv',
-      help='What model architecture to use')
+      default='conv',     #默认卷积模型
+      help='What model architecture to use')   #模型类型选择
   parser.add_argument(
       '--check_nans',
       type=bool,
       default=False,
-      help='Whether to check for invalid numbers during processing')
+      help='Whether to check for invalid numbers during processing')   #是否处理问题数字
   parser.add_argument(
       '--quantize',
       type=bool,
       default=False,
-      help='Whether to train the model for eight-bit deployment')
+      help='Whether to train the model for eight-bit deployment')   #训练的时候 8 位
   parser.add_argument(
       '--preprocess',
       type=str,
       default='mfcc',
-      help='Spectrogram processing mode. Can be "mfcc" or "average"')
+      help='Spectrogram processing mode. Can be "mfcc" or "average"')    #文件处理成mfcc 或者另外一个
 
-  FLAGS, unparsed = parser.parse_known_args()
-  tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+  FLAGS, unparsed = parser.parse_known_args()       #解析输入的参数
+  tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)    #运行,并传入参数
